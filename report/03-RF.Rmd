@@ -1,0 +1,32 @@
+
+
+```{r, include=FALSE}
+library(pander)
+```
+
+# Random Forest Model
+
+Explanation...
+
+```{r, include=FALSE}
+# Uncomment the next line to load your variables from RF.R (does not exist until you save.image() your model)
+# load("data/RF.Rdata")
+```
+
+```{r echo=FALSE}
+Step <- c("RF", "RF with Feature Selection")
+Features_Used <- c(0, 0)
+Total_Accuracy <- c(0, 0)
+Accuracy_per_class <- c(0, 0)
+df <- data.frame(Step, Features_Used, Total_Accuracy, Accuracy_per_class)
+colnames(df) <- c("Step", " Number of Features Used", "Accuracy", "Accuracy by Class")
+pander(df)
+```
+
+
+## Top Ten Features
+```{r echo=FALSE}
+Rank <- c(1:10)
+Feature <- c("a", "b", "c", "d", "e", "f", "g", "h", "i", "j")
+pander(data.frame(Rank, Feature))
+```

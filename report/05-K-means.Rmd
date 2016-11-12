@@ -1,0 +1,7 @@
+
+# K-means Clustering
+
+```{r, include=FALSE}
+# Uncomment the next line to load your variables from K-Means.R (does not exist until you save.image() your model)
+# load("data/KM.Rdata")
+```

@@ -1,0 +1,14 @@
+---
+title: "Classifing HRC's Emails by Sender"
+author: "Pranay Singal, Kensen Tan, Renee Sweeney, Abigail Chaver"
+date: "December 2, 2016"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+In this project, our goal is to classify the sender of emails found on Hillary Clinton's email server. We will use a word frequency table as our primary source of predictors, and will use 3 modeling approaches: Random Forest, Support Vector Machine, and K-means Clustering. We will compare the results of our supervised methods to select our final model.

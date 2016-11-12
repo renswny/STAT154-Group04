@@ -1,0 +1,23 @@
+
+
+```{r, include=FALSE}
+library(pander)
+```
+
+## Data Processing
+
+The initial data consisted of a tab separated file with two columns: the sender code (labeled 1-5) and the string of the email.
+
+After reading in the tsv, we converted the string to a character vector. We then wrote those vectors to a corpus so that we could use the R package `tm` to remove punctuation, numbers, and stop words; convert to lower case; and stem. 
+
+Next, we removed common words that were seen in every email, such as "subject", and "US". 
+
+We also explored other possible features that could predict sender, including number of words, average word length, and rate of use for ampersands, semicolons, question marks, and upper case. We found that the only variable which differed significantly between groups was number of words per email, so we added that as a feature to our matrix.
+
+```{r, echo=FALSE}
+Terms <- c(38066, 37966, 27504, 9177, 9178)
+Steps <- c("Raw", "Stop Words", "Stemmed", "Frequency Selection", "Additional Features")
+pander(data.frame(Steps, Terms))
+```
+
+
