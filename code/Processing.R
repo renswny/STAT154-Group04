@@ -29,6 +29,8 @@ for (i in 1:nrow(test)) {
   test$wordvec[i] <-  strsplit(test$V1[i], " ")
 }
 
+wordvec <- c(emails$wordvec, test$wordvec)
+
 # Create "corpus" that tm_map takes as input
 # Need to create one feature matrix for both train and test set
 emailsC <- Corpus(VectorSource(wordvec))
