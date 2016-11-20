@@ -18,7 +18,7 @@ library(wordcloud)
 ## Load data
 ## setwd to root directory
 emails <- read.table("data/HRC_train.tsv", sep="\t", header=FALSE, stringsAsFactors = FALSE)
-test <- read.table("data/HRC_test.tsv", sep="\t", header=FALSE, stringsAsFactors = FALSE)
+lengtest <- read.table("data/HRC_test.tsv", sep="\t", header=FALSE, stringsAsFactors = FALSE)
 
 # create vectors of words from initial string
 for (i in 1:nrow(emails)) {
@@ -199,4 +199,29 @@ write.csv(df_test, file="data/processed_test_df.csv")
 # After adding some additional features
 df_test_2 <- data.frame(test_num_words, test_numerals_per_word, 
                       test_hyphens_per_word, m_test)
-write.csv(df_test_2, file="data/processed_train_df_2.csv")
+write.csv(df_test_2, file="data/processed_test_df_2.csv")
+
+
+# Try computing one-way significance to produce reduced feature set
+word_aov <- c()
+words <- as.vector(colnames(m))
+for (i in 1:ncol(m)) {
+  col <- m_train[,i]
+  summ <- summary(aov(col ~ emails$V1))
+  p <- summ[[1]][["Pr(>F)"]][1]
+  word_aov <- c(word_aov, p)
+}
+
+aov_df <- data.frame(words, word_aov)
+# Take only words with p-values less than 5%
+sig_df <- aov_df[aov_df$word_aov < .05, ]
+sig_cols <- sig_df$words
+sig_dtmr <- m[, sig_cols]
+
+df3 <- data.frame(emails$V1, num_words, numerals_per_word,
+                  hyphens_per_word, sig_dtmr[1:1200,])
+write.csv(df3, file="data/processed_train_df_3.csv")
+
+df_test_3 <- data.frame(test_num_words, test_numerals_per_word, 
+                        test_hyphens_per_word, sig_dtmr[1201:1305,])
+write.csv(df_test_3, file="data/processed_test_df_3.csv")
