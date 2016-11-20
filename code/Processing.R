@@ -96,6 +96,11 @@ semicolons <- c()
 qmarks_per_word <- c()
 semicolons_per_word <- c()
 uppercase_per_word <- c()
+periods <- c()
+commas <- c()
+hyphens <- c()
+parentheses <- c()
+numerals <- c()
 for (i in 1:nrow(emails)) {
   vec <- as.vector((emails$wordvec[i])[[1]])
   total_chars[i] <- sum(nchar(vec))
@@ -107,6 +112,11 @@ for (i in 1:nrow(emails)) {
   semicolons[i] <-str_count(emails$V2[i], pattern = ";" )
   semicolons_per_word[i] <- semicolons[i]/num_words[i]
   uppercase_per_word[i] <- str_count(emails$V2[i], pattern = "[A-Z]" )/num_words[i]
+  periods[i] <-str_count(emails$V2[i], pattern = ".")
+  commas[i] <- str_count(emails$V2[i], pattern = ",")
+  hyphens[i] <- str_count(emails$V2[i], pattern = "-")
+  parentheses[i] <- str_count(emails$V2[i], pattern = "\\(") + str_count(emails$V2[i], pattern = "\\)")
+  numerals[i] <- str_count(emails$V2[i], pattern = "[0-9]")
 }
 
 # Significant
@@ -132,6 +142,26 @@ summary(aov(semicolons_per_word ~ emails$V1))
 # Not significant
 summary(aov(uppercase_per_word ~ emails$V1))
 
+# Not significant
+words_per_sentence <- num_words/periods
+summary(aov(words_per_sentence ~ emails$V1))
+
+# Not significant
+words_per_comma <- commas/num_words
+summary(aov(words_per_comma ~ emails$V1))
+
+# Significant
+hyphens_per_word <- hyphens/num_words
+summary(aov(hyphens_per_word ~ emails$V1))
+
+# Not Significant
+parentheses_per_word <- parentheses/num_words
+summary(aov(parentheses_per_word ~ emails$V1))
+
+# Significant
+numerals_per_word <- numerals/num_words
+summary(aov(numerals_per_word ~ emails$V1))
+
 # Wasn't able to find anything too distinct in writing styles
 # But will add number of words in email as a feature
 
@@ -147,12 +177,26 @@ df <- data.frame(emails$V1, num_words, m_train)
 # Write base set to csv
 write.csv(df, file="data/processed_train_df.csv")
 
+# After adding new features
+df2 <- data.frame(emails$V1, num_words, numerals_per_word,
+                  hyphens_per_word, m_train)
+write.csv(df2, file="data/processed_train_df_2.csv")
 
 # Process Test Data for use in final submission
 m_test <- m[1201:1305,]
+test_num_words <- c()
+test_numerals_per_word <- c()
+test_hyphens_per_word <- c()
 for (i in 1:nrow(test)) {
   vec <- as.vector((test$wordvec[i])[[1]])
-  test$num_words[i] <- length(vec)
+  test_num_words[i] <- length(vec)
+  test_numerals_per_word[i] <- str_count(test$wordvec[i], pattern = "[0-9]")/test$num_words[i]
+  test_hyphens_per_word[i] <- str_count(test$wordvec[i], pattern = "-")/test$num_words[i]
 }
 df_test <- data.frame(test$num_words, m_test)
 write.csv(df_test, file="data/processed_test_df.csv")
+
+# After adding some additional features
+df_test_2 <- data.frame(test_num_words, test_numerals_per_word, 
+                      test_hyphens_per_word, m_test)
+write.csv(df_test_2, file="data/processed_train_df_2.csv")
