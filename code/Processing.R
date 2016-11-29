@@ -45,6 +45,8 @@ processed <- tm_map(processed, removeWords, stopwords("english"))
 dtm_stop <- DocumentTermMatrix(processed)
 # 37966 terms
 processed <- tm_map(processed, stemDocument, lazy=TRUE)
+processed2 <- tm_map(processed, stemDocument, language = "english")
+dtm_stem2 <- DocumentTermMatrix(processed2)
 dtm_stem <- DocumentTermMatrix(processed)
 # 26177 terms
 freq <- colSums(as.matrix(dtm_stem))
@@ -55,6 +57,7 @@ freq[head(ord, n = 20)]
 
 # Keep only words that are in 3-1200 emails (least common word eliminated by this is "subject"):
 dtmr <- DocumentTermMatrix(processed, control=list(bounds = list(global=c(3, 1200))))
+dtmr2 <- DocumentTermMatrix(processed2, control=list(bounds = list(global=c(3, 800))))
 # 8686 terms
 freqr <- colSums(as.matrix(dtmr))
 ordr <- order(freqr,decreasing=TRUE)
@@ -213,6 +216,7 @@ for (i in 1:ncol(m)) {
 }
 
 aov_df <- data.frame(words, word_aov)
+
 # Take only words with p-values less than 5%
 sig_df <- aov_df[aov_df$word_aov < .05, ]
 sig_cols <- sig_df$words
@@ -225,3 +229,4 @@ write.csv(df3, file="data/processed_train_df_3.csv")
 df_test_3 <- data.frame(test_num_words, test_numerals_per_word, 
                         test_hyphens_per_word, sig_dtmr[1201:1305,])
 write.csv(df_test_3, file="data/processed_test_df_3.csv")
+
