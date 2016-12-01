@@ -18,7 +18,7 @@ library(wordcloud)
 ## Load data
 ## setwd to root directory
 emails <- read.table("data/HRC_train.tsv", sep="\t", header=FALSE, stringsAsFactors = FALSE)
-lengtest <- read.table("data/HRC_test.tsv", sep="\t", header=FALSE, stringsAsFactors = FALSE)
+test <- read.table("data/HRC_test.tsv", sep="\t", header=FALSE, stringsAsFactors = FALSE)
 
 # create vectors of words from initial string
 for (i in 1:nrow(emails)) {
@@ -48,46 +48,59 @@ processed <- tm_map(processed, stemDocument, lazy=TRUE)
 processed2 <- tm_map(processed, stemDocument, language = "english")
 dtm_stem2 <- DocumentTermMatrix(processed2)
 dtm_stem <- DocumentTermMatrix(processed)
-# 26177 terms
+# 27504 terms
 freq <- colSums(as.matrix(dtm_stem))
 ord <- order(freq,decreasing=TRUE)
 freq[head(ord, n = 20)]
 
 # Most frequent terms "state", "depart", "case", "date", "doc", "subject", "sent", "will", not meaningful.
 
-# Keep only words that are in 3-1200 emails (least common word eliminated by this is "subject"):
+# Keep only words that are in 3-1200 emails
 dtmr <- DocumentTermMatrix(processed, control=list(bounds = list(global=c(3, 1200))))
-dtmr2 <- DocumentTermMatrix(processed2, control=list(bounds = list(global=c(3, 800))))
 # 8686 terms
 freqr <- colSums(as.matrix(dtmr))
 ordr <- order(freqr,decreasing=TRUE)
 freqr[head(ordr)]
 freqr[tail(ordr)]
 
+#############
+# Wordclouds
+#############
+
 set.seed(1234)
-# Break up by sender
+# Break up by sender to build wordclouds
 for (i in 1:5) {
   dtrmi <-  dtmr[emails$V1 == as.character(i), ]
   assign(paste("dtmr",i, sep=""), dtrmi)
   freqi <- colSums(as.matrix(dtrmi))
   assign(paste("freq",i, sep=""), freqi)
+  # Plot
+  path <- paste("images/wordcloud", as.character(i), ".png", sep = "")
+  png(path)
+  layout(matrix(c(1, 2), nrow=2), heights=c(1, 5))
+  par(mar=rep(0, 4))
+  plot.new()
+  text(x=0.5, y=0.5, paste("Sender", i) )
+  wordcloud(names(freqi), freqi, min.freq=200)
+  dev.off()
 }
 
-# Wordclouds
-set.seed(1234)
-wordcloud(names(freq1), freq1, min.freq=200)
-wordcloud(names(freq2), freq2, min.freq=200)
-wordcloud(names(freq3), freq3, min.freq=200)
-wordcloud(names(freq4), freq4, min.freq=200)
-wordcloud(names(freq5), freq5, min.freq=200)
 
 ############################################################
 # 2. Exploring other possible features from training set
 ############################################################
 
 # Exploration
-hist(emails$V1)
-plot(nchar(emails$V2), emails$V1)
+library(ggplot2)
+png("images/SenderHistogram.png")
+qplot(V1, data=emails, geom="histogram", col=I("white"), binwidth=1, 
+              main = "Histogram for Sender",
+              xlab = "Sender")
+dev.off()
+png("images/SenderNchar.png")
+plot(nchar(emails$V2), emails$V1, ylab="Sender", xlab ="Characters per Email",
+     main="Characters per Email by Sender")
+dev.off()
 
 # Compute some other statistics about each email, see if they might be useful
 total_chars <- c()
@@ -169,7 +182,7 @@ summary(aov(numerals_per_word ~ emails$V1))
 # But will add number of words in email as a feature
 
 ############################################################
-# 3. Creating final dataframe
+# 3. Creating full dataframe
 ############################################################
 
 # Create df for analysis
@@ -199,10 +212,14 @@ for (i in 1:nrow(test)) {
 df_test <- data.frame(test$num_words, m_test)
 write.csv(df_test, file="data/processed_test_df.csv")
 
-# After adding some additional features
+# After adding some additional features: our best model
 df_test_2 <- data.frame(test_num_words, test_numerals_per_word, 
                       test_hyphens_per_word, m_test)
 write.csv(df_test_2, file="data/processed_test_df_2.csv")
+
+############################################################
+# 4. FEATURE REDUCTION: UNIVARIATE ANOVA
+############################################################
 
 
 # Try computing one-way significance to produce reduced feature set
@@ -229,4 +246,89 @@ write.csv(df3, file="data/processed_train_df_3.csv")
 df_test_3 <- data.frame(test_num_words, test_numerals_per_word, 
                         test_hyphens_per_word, sig_dtmr[1201:1305,])
 write.csv(df_test_3, file="data/processed_test_df_3.csv")
+
+
+###########################################################
+# 5. BORUTA FEATURE SELECTION
+# With ~9000 features, we try to run a feature selection method
+############################################################
+
+library(caret)
+library(Boruta)
+library(dplyr)
+
+train <- read.csv("data/processed_train_df_2.csv")
+set.seed(1234)
+idx <- createDataPartition(train$emails.V1,p=0.01,list=FALSE)
+
+# Take small sample of the data
+sample.df <- train[idx,]
+explanatory.attributes <- setdiff(names(sample.df),c("X","emails.V1"))
+data.classes <- sapply(explanatory.attributes,function(x){class(sample.df[,x])})
+
+unique.classes <- unique(data.classes)
+attr.by.data.types <- lapply(unique.classes,function(x){names(data.classes[data.classes==x])})
+names(attr.by.data.types) <- unique.classes
+comment(attr.by.data.types) <- "list that categorize training data types"
+
+pp <- preProcess(sample.df[c(attr.by.data.types$numeric,attr.by.data.types$integer)],
+                 method=c("medianImpute"))
+pp.sample.df <- predict(pp,sample.df[c(attr.by.data.types$numeric,attr.by.data.types$integer)])
+df <- cbind(pp.sample.df,sample.df[attr.by.data.types$character])
+
+# Change the colnames that begin with "shadow" as it throws an error
+cn <- colnames(df)
+for (i in 1:length(cn)) {
+  if (str_detect(cn[i], "shadow")) {
+    print(cn[i])
+    cn[i] <- paste("X", cn[i])
+  }
+}
+colnames(df) <- cn
+
+# Run Boruta 
+bor.results <- Boruta(df,factor(sample.df$emails.V1),
+                      maxRuns=18, pValue = 0.4,
+                      doTrace=0)
+
+# Unfortunately, no features are confirmed as important.
+# Only about 11 are considered possibly important, the rest are confirmed unimportant
+# We raised the p-value in the hopes of getting more features, but got similar results
+
+decision <- bor.results$finalDecision
+decision <- data.frame(rownames(decision), decision)
+tentative <- decision[decision$decision == "Tentative",]
+tentativeWords <- tentative$rownames.decision
+tentativeWords <- as.vector(tentativeWords)
+new_df <- train[, tentativeWords]
+
+# From these 11, we compute quadratic and cubic powers
+powerFeats <- train[ , 1]
+for (i in 1:ncol(new_df)) {
+  for (j in 1:ncol(new_df)) {
+    newvar = paste(colnames(new_df)[i], colnames(new_df)[j], sep = "*")
+    x = data.frame(new_df[ , i]*new_df[ , j])
+    colnames(x) = newvar
+    powerFeats <- data.frame(powerFeats, x)
+  }
+}
+
+for (i in 1:ncol(new_df)) {
+  for (j in 1:ncol(new_df)) {
+    for (k in 1:ncol(new_df)) {
+      newvar = paste(colnames(new_df)[i], colnames(new_df)[j],colnames(new_df)[k] , sep = "*")
+      x = data.frame(new_df[ , i]*new_df[ , j]*new_df[ , k])
+      colnames(x) = newvar
+      powerFeats <- data.frame(powerFeats, x)
+    }
+  }
+}
+y <- powerFeats[ , -1]
+new_df <- data.frame(train[, 1], new_df, powerFeats[ , -1])
+
+# Contains about 1200 features
+write.csv(file="data/processed_train_df_4.csv", new_df)
+
+
+
 
