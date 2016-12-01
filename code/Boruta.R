@@ -1,3 +1,9 @@
+############################################################
+# BORUTA FEATURE SELECTION
+# With ~9000 features, we try to run a feature selection method
+############################################################
+
+
 library(caret)
 library(Boruta)
 library(dplyr)
@@ -5,6 +11,8 @@ library(dplyr)
 train <- read.csv("data/processed_train_df_2.csv")
 set.seed(1234)
 idx <- createDataPartition(train$emails.V1,p=0.01,list=FALSE)
+
+# Take small sample of the data
 sample.df <- train[idx,]
 explanatory.attributes <- setdiff(names(sample.df),c("X","emails.V1"))
 data.classes <- sapply(explanatory.attributes,function(x){class(sample.df[,x])})
@@ -21,7 +29,7 @@ pp.sample.df <- predict(pp,sample.df[c(attr.by.data.types$numeric,attr.by.data.t
 # combine numeric data with character data
 df <- cbind(pp.sample.df,sample.df[attr.by.data.types$character])
 
-
+# Change the colnames that begin with "shadow" as it throws an error
 cn <- colnames(df)
 for (i in 1:length(cn)) {
   if (str_detect(cn[i], "shadow")) {
@@ -30,18 +38,23 @@ for (i in 1:length(cn)) {
   }
 }
 colnames(df) <- cn
-
+# Run Boruta 
 bor.results <- Boruta(df,factor(sample.df$emails.V1),
                       maxRuns=18, pValue = 0.4,
                       doTrace=0)
+
+# Unfortunately, no features are confirmed as important.
+# Only about 11 are considered possible important, the rest are confirmed unimportant
+# We raised the p-value in the hopes of getting more features, but got similar results
+
 decision <- bor.results$finalDecision
 decision <- data.frame(rownames(decision), decision)
 tentative <- decision[decision$decision == "Tentative",]
-
 tentativeWords <- tentative$rownames.decision
 tentativeWords <- as.vector(tentativeWords)
 new_df <- train[, tentativeWords]
 
+# From these 11, we compute quadratic and cubic powers
 powerFeats <- train[ , 1]
 for (i in 1:ncol(new_df)) {
   for (j in 1:ncol(new_df)) {
@@ -65,5 +78,5 @@ for (i in 1:ncol(new_df)) {
  y <- powerFeats[ , -1]
 new_df <- data.frame(train[, 1], new_df, powerFeats[ , -1])
 
+# Contains about 1200 features
 write.csv(file="data/processed_train_df_4.csv", new_df)
-getwd()
