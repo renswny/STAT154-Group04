@@ -9,11 +9,6 @@ library(parallel)
 # Setwd to root directory of project before reading data
 setwd("~/Fall 2016/STAT 154/Final Project")
 
-# Read training data
-#train_df <- read.csv("STAT154-Group04/data/processed_train_df_4.csv")
-#train_df <- train_df[,-1]
-#train_df[,1] <- as.factor(train_df[,1])
-
 # First column is target variable
 # Second is number of words 
 # Remaining are word frequencies
@@ -100,18 +95,58 @@ svm_poly_df3 <- parSapply(cl, 1:length(cost_vec), FUN = sum_poly)
 svm_rad_df3 <- parSapply(cl, 1:length(cost_gamma), FUN = sum_rad)
 stopCluster(cl)
 
-############################
-######## ACCURACY ##########
-############################
-
 svm_lin_bestmod <- svm(emails.V1~ ., data = train_df, kernel = "linear", cost = .1,
                        tunecontrol = tune.control(cross = 5))
 
-train_pred <- predict(svm_lin_bestmod, newdata = train_df)
-acc_matrix <- table(train_df[,1], train_pred)
+############################
+######## ACCURACY ##########
+############################
+total_accuracy <- c()
+accuracy_sender <- list()
 
-total_acc <- sum(diag(acc_matrix)) / nrow(train_df)
+predict_values <- function(train_data_set, test_data_set){
+  model_svm <- svm(emails.V1~ ., data = train_data_set, kernel = "linear", cost = .1,
+                   tunecontrol = tune.control(cross = 5))
+  predicted_values <- predict(model_svm, newdata = test_data_set)
+  return(predicted_values)
+}
 
+total_acc_fn <- function(email_senders, predicted_test_values){
+  diag_matrix <- diag(table(email_senders, predicted_test_values))
+  accuracy <- sum(diag_matrix) / length(email_senders)
+  return(accuracy)
+}
+
+sender_acc_fn <- function(email_senders, predicted_test_values){
+  sender_accuracy_k <- c()
+  
+  actual_email_dist <- table(email_senders)
+  diag_matrix <- diag(table(email_senders, predicted_test_values))
+  
+  for (i in 1:5){
+    sender_accuracy_k[i] <- diag_matrix[i] / actual_email_dist[i]
+  }
+  
+  return(sender_accuracy_k)
+}
+
+k_folds <- c(rep(1, nrow(train_df)/5), rep(2, nrow(train_df)/5), rep(3, nrow(train_df)/5),
+             rep(4, nrow(train_df)/5), rep(5, nrow(train_df)/5))
+
+
+for (k in 1:5){
+  train_k <- train_df[(k_folds!=k),]
+  test_k <- train_df[(k_folds==k),]
+  
+  test_email_sender <- test_k[,1]
+  test_k <- test_k[,-1]
+  
+  test_pred <- predict_values(train_k, test_k)
+  
+  total_accuracy[k] <- total_acc_fn(test_email_sender, test_pred)
+  
+  accuracy_sender[[k]] <- sender_acc_fn(test_email_sender, test_pred)
+}
 
 ############################
 ######## PREDICTON #########
@@ -134,5 +169,4 @@ write.table(x = pred.te, file = "predict.txt", row.names = FALSE, col.names = FA
 ############################################################
 # Save image in Rdata so it can be loaded in other scripts
 save.image(file="STAT154-Group04/data/SVM.Rdata")
-load("STAT154-Group04/data/SVM.Rdata")
 ############################################################
