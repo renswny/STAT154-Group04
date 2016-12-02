@@ -2,19 +2,20 @@ library("ggplot2")
 set.seed(29)
 
 # read in training data and top 100 features and index only those features
-trainFull <- read.csv("Statistics 154/Final Project/processed_train_df_2.csv")
-top100features <- as.character(read.csv("Statistics 154/Final Project/top100.csv", header = TRUE)$x)
+trainFull <- read.csv("processed_train_df_2.csv")
+top100features <- as.character(read.csv("top100.csv", header = TRUE)$x)
 x <- trainFull[top100features]
 
-# run k-means with 50 random initial assignment iterations
+# run k-means 50 times with randomly initializing assignments
 km <- kmeans(x, 5, nstart = 50)
-# how many 
+# how many data points assigned to each label in original training set
 table(trainFull$emails.V1)
-# compare table above to number of 
+# compare table above to cluster sizes
 km
-# total sum of squared deviations
+# within-cluster sum of squares measuring cluster compactness
 km$tot.withinss
 
+# plot clusters from different two-dimensional angles
 km$cluster <- as.factor(km$cluster)
 ggplot(x, aes(sid, num_words, color = km$cluster)) + geom_point() + theme(legend.position="none") +
   ggtitle("#1 Best Feature (sid) vs. #3 Best Feature (num_words)")
