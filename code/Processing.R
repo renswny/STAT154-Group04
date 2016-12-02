@@ -55,7 +55,7 @@ freq[head(ord, n = 20)]
 
 # Keep only words that are in 3-1305 emails
 dtmr <- DocumentTermMatrix(processed, control=list(bounds = list(global=c(3, 1305))))
-# 8686 terms
+# 9789 terms
 freqr <- colSums(as.matrix(dtmr))
 ordr <- order(freqr,decreasing=TRUE)
 freqr[head(ordr)]
@@ -234,11 +234,11 @@ sig_cols <- sig_df$words
 sig_dtmr <- m[, sig_cols]
 
 df3 <- data.frame(emails$V1, num_words, numerals_per_word,
-                  hyphens_per_word, sig_dtmr[1:1200,])
+                  hyphens_per_word, sig_dtmr[1:3505,])
 write.csv(df3, file="data/processed_train_df_3.csv")
 
-df_test_3 <- data.frame(test_num_words, test_numerals_per_word, 
-                        test_hyphens_per_word, sig_dtmr[1201:1305,])
+df_test_3 <- data.frame(test_num_words, test_qmarks_per_word, 
+                        test_hyphens_per_word, sig_dtmr[3506:3894,])
 write.csv(df_test_3, file="data/processed_test_df_3.csv")
 
 
@@ -286,17 +286,18 @@ bor.results <- Boruta(df,factor(sample.df$emails.V1),
                       doTrace=0)
 
 # Unfortunately, no features are confirmed as important.
-# Only about 11 are considered possibly important, the rest are confirmed unimportant
+# Only about 10 are considered possibly important, the rest are confirmed unimportant
 # We raised the p-value in the hopes of getting more features, but got similar results
 
 decision <- bor.results$finalDecision
+decision <- as.matrix(decision)
 decision <- data.frame(rownames(decision), decision)
 tentative <- decision[decision$decision == "Tentative",]
 tentativeWords <- tentative$rownames.decision
 tentativeWords <- as.vector(tentativeWords)
 new_df <- train[, tentativeWords]
 
-# From these 11, we compute quadratic and cubic powers
+# From these 10, we compute quadratic and cubic powers
 powerFeats <- train[ , 1]
 for (i in 1:ncol(new_df)) {
   for (j in 1:ncol(new_df)) {
@@ -320,7 +321,7 @@ for (i in 1:ncol(new_df)) {
 y <- powerFeats[ , -1]
 new_df <- data.frame(train[, 1], new_df, powerFeats[ , -1])
 
-# Contains about 1200 features
+# Contains about 1100 features
 write.csv(file="data/processed_train_df_4.csv", new_df)
 
 

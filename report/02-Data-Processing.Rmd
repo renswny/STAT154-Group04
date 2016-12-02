@@ -8,7 +8,7 @@ library(pander)
 
 ## Data Processing
 
-The initial training data consisted of a tab separated file with two columns: the sender code (labeled 1-5) and the string of the email. With 1200 emails in the training set and another 105 as our test set, we proceeded to converting the emails into a frequency matrix.
+The initial training data consisted of a tab separated file with two columns: the sender code (labeled 1-5) and the string of the email. With 3505 emails in the training set and another 394 as our test set, we proceeded to converting the emails into a frequency matrix.
 
 After reading in the tsv, we converted the string to a character vector. We then wrote those vectors to a corpus so that we could use the R package `tm` to remove punctuation, numbers, and stop words; convert to lower case; and stem. 
 
@@ -44,23 +44,23 @@ knitr::include_graphics("../images/SenderNchar.png")
 
 We also explored other possible features that could predict sender, including number of words, average word length, and rate of use for ampersands, semicolons, question marks, and upper case, numerals, and hyphens. We performed simple one-way ANOVA to determine whether or not to include the extra feature in our matrix. 
 
-We found that words per email, number of hyphens divided by number of words, and number of numerals divided by number of words all yielded small p-values. Ordinarilly we would be concerned with the significance issues that arise with multiple testing, but this was just a prelimary vetting. We added these three as features to our matrix. It is worth noting that this method is not ideal, as any significant higher-level interactions will be missed.
+We found that words per email, number of hyphens divided by number of words, and number of question marks divided by number of words all yielded small p-values. Ordinarilly we would be concerned with the significance issues that arise with multiple testing, but this was just a prelimary vetting. We added these three as features to our matrix. It is worth noting that this method is not ideal, as any significant higher-level interactions will be missed.
 
 Through these steps, we produced feature matrices with the following numbers of terms:
 
 ```{r, echo=FALSE}
-Terms <- c(38066, 37966, 27504, 9177, 9180)
+Terms <- c(38427, 38327, 27777, 9789, 9792)
 Steps <- c("Raw", "Stop Words", "Stemmed", "Frequency Selection", "Additional Features")
 pander(data.frame(Steps, Terms))
 ```
 
-Unfortunately, our reduced feature matrix was still extremely large, at 9180 columns. We tried two strategies to reduce the number of columns. 
+Unfortunately, our reduced feature matrix was still extremely large, at 9792 columns. We tried two strategies to reduce the number of columns. 
 
 The first was to use univariate ANOVA to remove features that had no statistical significance. As mentioned before, this method is not highly defensible statistically; it both creates problems with multiple testing (since we are running about 9000 hypothesis tests), and will miss any features that have significant interaction effects but not one-way effects. However, we thought it might be worth a try, so we selected only words whose ANOVA produces p-values of less than 0.05, resulting in 3599 features. Unfortunately, this data produced higher error rates than the original, probably due to lost information that could not be captured in a one-way analysis.
 
 The second was a feature selection method called the Boruta algorithm. The Boruta algorithm avoids the problem of only catching one-way signficance. This algorithm takes a sample of the data and shuffles within-column values. Then it compares the results of running RF on the "shadow" data with the original data. If a real feature has higher importance than the best of the shadow features, it is confirmed as important.
 
-Sadly, when we ran Boruta, nearly all of the features were rejected as unimportant. We took the small subset (11 features) that was labeled "tentative", and computed a power feature matrix that went up to cubic powers, including interactions (about 1200 features). However, we did not have high expectations for this data set, as it gave up an enormous amount of information.
+Sadly, when we ran Boruta, nearly all of the features were rejected as unimportant. We took the small subset (10 features) that was labeled "tentative", and computed a power feature matrix that went up to cubic powers, including interactions (about 1200 features). However, we did not have high expectations for this data set, as it gave up an enormous amount of information.
 
 
 ### References
