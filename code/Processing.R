@@ -53,7 +53,7 @@ freq[head(ord, n = 20)]
 
 # Most frequent terms "state", "depart", "case", "date", "doc", "subject", "sent", "will", not meaningful.
 
-# Keep only words that are in 3-1305 emails
+# Keep only words that are in frequency bounds
 dtmr <- DocumentTermMatrix(processed, control=list(bounds = list(global=c(3, 1305))))
 # 9789 terms
 freqr <- colSums(as.matrix(dtmr))

@@ -27,3 +27,6 @@ This folder contains several types of data.
 
 ### images/ 
 This folder contains plots that were generated through scripts, including some screenshots. All images in the report should also be contained in this folder
+
+### wrongdata/
+This contains some of the data, the processing script, and the RF model from the beginning of our project, when we misread the data. Because we built a very thorough RF model on this data, and some of our plots were generated using it, we have included this data and these scripts.

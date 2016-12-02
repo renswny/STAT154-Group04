@@ -38,7 +38,8 @@ ggplot(df, aes(x = Trees, y = CV_Error, col = as.factor(M))) +
   geom_line(aes(x = Trees, y = CV_Error, col = as.factor((M))), data = mean_df) + 
   scale_x_continuous(breaks = c(200, 400, 600)) +
   guides(col=guide_legend(title="M")) + guides(size=FALSE) +
-  guides(shape=guide_legend(title="Mean"))
+  guides(shape=guide_legend(title="Mean")) +
+  ggtitle("Cross-Validation at 9792 Features")
 
 dev.off()
 
@@ -77,7 +78,8 @@ ggplot(df, aes(x = Trees, y = CV_Error, col = as.factor(M))) +
   geom_line(aes(x = Trees, y = CV_Error, col = as.factor((M))), data = mean_df) + 
   scale_x_continuous(breaks = c(200, 400, 600)) +
   guides(col=guide_legend(title="M")) + guides(size=FALSE) +
-  guides(shape=guide_legend(title="Mean"))
+  guides(shape=guide_legend(title="Mean")) +
+  ggtitle("Cross-Validation at 7344 Features")
 
 dev.off()
 
@@ -117,7 +119,8 @@ ggplot(df, aes(x = Trees, y = CV_Error, col = as.factor(M))) +
   geom_line(aes(x = Trees, y = CV_Error, col = as.factor((M))), data = mean_df) + 
   scale_x_continuous(breaks = c(200, 400, 600)) +
   guides(col=guide_legend(title="M")) + guides(size=FALSE) +
-  guides(shape=guide_legend(title="Mean"))
+  guides(shape=guide_legend(title="Mean")) +
+  ggtitle("Cross Validation at 4896 Features")
 dev.off()
 
 
@@ -156,7 +159,8 @@ ggplot(df, aes(x = Trees, y = CV_Error, col = as.factor(M))) +
   geom_line(aes(x = Trees, y = CV_Error, col = as.factor((M))), data = mean_df) + 
   scale_x_continuous(breaks = c(200, 400, 600)) +
   guides(col=guide_legend(title="M")) + guides(size=FALSE) +
-  guides(shape=guide_legend(title="Mean"))
+  guides(shape=guide_legend(title="Mean")) +
+  ggtitle("Cross Validation at 2448 Features")
 dev.off()
 
 
@@ -195,18 +199,56 @@ ggplot(df, aes(x = Trees, y = CV_Error, col = as.factor(M))) +
   geom_line(aes(x = Trees, y = CV_Error, col = as.factor((M))), data = mean_df) + 
   scale_x_continuous(breaks = c(200, 400, 600)) +
   guides(col=guide_legend(title="M")) + guides(size=FALSE) +
-  guides(shape=guide_legend(title="Mean"))
+  guides(shape=guide_legend(title="Mean"))  +
+  ggtitle("Cross Validation at 1469 Features")
 dev.off()
 
-load("data/output.Rdata")
-View(vec1)
-v <- as.matrix(vec1)
-rownames(vec1)
-
-write.csv(file = "data/importance.csv", vec1)
-vec1 <- read.csv("data/importance.csv")
 
 
 load("data/SVM.Rdata")
+View(svm_poly_df3)
+View(svm_rad_df3)
+rownames(as.matrix(svm_rad_df3))
+unname(as.matrix(svm_rad_df3))
+svm_rad <- data.frame("params" = rownames(as.matrix(svm_rad_df3)), 
+                      "Mean CV Error" = unname(as.matrix(svm_rad_df3)))
+rownames(svm_rad)
+rad_Cost = rep(c(0.1, 0.5, 1, 10, 100), each=4)
+rad_Gamma = rep(c(0.1, 0.5, 1, 5), 5)
+
+df_rad <- data.frame("Cost" = rad_Cost,
+                     "Method" = rep("Radial", 20),
+                     "Mean CV Error" = svm_rad$Mean.CV.Error, 
+                     "Gamma" = rad_Gamma
+                     )
+
+df_poly <- data.frame("Cost" = c(0.1, 0.5, 1, 10, 100), 
+                      "Method" = rep("Poly", 5),
+                      "Mean CV Error" = unname(svm_poly_df3),
+                      "Gamma" = rep(NA, 5 ))
+
+df_lin <- data.frame("Cost" = c(0.1, 0.5, 1, 10, 100), 
+                      "Method" = rep("Linear", 5),
+                      "Mean CV Error" = unname(svm_lin_df3), 
+                     "Gamma" = rep(NA, 5 ))
+
+svm_err <- rbind(df_lin, df_poly, df_rad)
 
 
+png("images/SVM_CV.png")
+ggplot(svm_err, aes(x = Cost, y = Mean.CV.Error, col = as.factor(Method))) +
+  geom_point() + 
+  geom_line() + 
+  guides(col=guide_legend(title="Method"))
+
+dev.off()
+
+
+
+png("images/Radial_CV.png")
+ggplot(df_rad, aes(x = Cost, y = Mean.CV.Error, col = as.factor(Gamma))) +
+  geom_point() + 
+  geom_line() + 
+  guides(col=guide_legend(title="Gamma"))
+
+dev.off()
