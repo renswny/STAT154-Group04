@@ -4,14 +4,26 @@ STAT154 Final Project: Unclassified Released Emails of HRC
 Authors: Pranay Singal, Kensen Tan, Renee Sweeney, Abigail Chaver
 Date: December 2, 2016
 
-To recompile the report, run "make" from terminal in the root directory of the project.
-To delete the report, run "make clean".
+This project covers several classification models built on the released emails from Hillary Clinton's server.
 
-Project Structure:
 
-* code/ contains the scripts used to preprocess the data, build each of the three models, and predict values for the test set.
+## Project Structure:
 
-* data/ contains the raw TSVs and the processed data CSVs that are used in analysis. data/ also contains .Rdata files saved from each model.
+### Standalone Files
+* README
+* report.pdf  is our final report
+* predict.txt is our best prediction, generated from our RF model
+* predict2.txt was a prediction generated from our SVM, which performed worse than RF
 
-* report/ contains the sections of the report and the concatenated report. Report.pdf is the final report.
+### code/ 
+This folder contains the scripts used to preprocess the data and build each of the three models. It also includes a script for an alternative method we tried, Latent Dirichlet Allocation, and a trivial script for generating some plots.
 
+### data/  
+This folder contains several types of data.
+*  The raw TSVs of the email data. 
+* The 4 "processed" CSVs cover a few versions of the main data used for analysis. The second one of these was the most useful.
+* The "topics" datasets were generated from from filtered methods, with 15 being most useful
+* The .Rdata files were used to save workspace images for us to communicate and pass objects more easily
+
+### images/ 
+This folder contains plots that were generated through scripts, including some screenshots. All images in the report should also be contained in this folder
