@@ -17,8 +17,8 @@ library(wordcloud)
 
 ## Load data
 ## setwd to root directory
-emails <- read.table("data/HRC_train.tsv", sep="\t", header=FALSE, stringsAsFactors = FALSE)
-test <- read.table("data/HRC_test.tsv", sep="\t", header=FALSE, stringsAsFactors = FALSE)
+emails <- read.table("data/HRC_train.tsv", header=FALSE, stringsAsFactors = FALSE)
+test <- read.table("data/HRC_test.tsv", header=FALSE, stringsAsFactors = FALSE)
 
 # create vectors of words from initial string
 for (i in 1:nrow(emails)) {
@@ -40,23 +40,21 @@ processed <- tm_map(emailsC, content_transformer(tolower))
 processed <- tm_map(processed, removePunctuation)
 processed <- tm_map(processed, removeNumbers)
 dtm_raw <- DocumentTermMatrix(processed)
-# 38066 terms
+# 38427 terms
 processed <- tm_map(processed, removeWords, stopwords("english"))
 dtm_stop <- DocumentTermMatrix(processed)
-# 37966 terms
-processed <- tm_map(processed, stemDocument, lazy=TRUE)
-processed2 <- tm_map(processed, stemDocument, language = "english")
-dtm_stem2 <- DocumentTermMatrix(processed2)
+# 38327 terms
+processed <- tm_map(processed, stemDocument, language = "english")
 dtm_stem <- DocumentTermMatrix(processed)
-# 27504 terms
+# 27777 terms
 freq <- colSums(as.matrix(dtm_stem))
 ord <- order(freq,decreasing=TRUE)
 freq[head(ord, n = 20)]
 
 # Most frequent terms "state", "depart", "case", "date", "doc", "subject", "sent", "will", not meaningful.
 
-# Keep only words that are in 3-1200 emails
-dtmr <- DocumentTermMatrix(processed, control=list(bounds = list(global=c(3, 1200))))
+# Keep only words that are in 3-1305 emails
+dtmr <- DocumentTermMatrix(processed, control=list(bounds = list(global=c(3, 1305))))
 # 8686 terms
 freqr <- colSums(as.matrix(dtmr))
 ordr <- order(freqr,decreasing=TRUE)
@@ -127,7 +125,6 @@ for (i in 1:nrow(emails)) {
   qmarks_per_word[i] <- qmarks[i]/num_words[i]
   semicolons[i] <-str_count(emails$V2[i], pattern = ";" )
   semicolons_per_word[i] <- semicolons[i]/num_words[i]
-  uppercase_per_word[i] <- str_count(emails$V2[i], pattern = "[A-Z]" )/num_words[i]
   periods[i] <-str_count(emails$V2[i], pattern = ".")
   commas[i] <- str_count(emails$V2[i], pattern = ",")
   hyphens[i] <- str_count(emails$V2[i], pattern = "-")
@@ -138,7 +135,7 @@ for (i in 1:nrow(emails)) {
 # Significant
 summary(aov(total_chars ~ emails$V1))
 
-# Not significant
+# Significant
 summary(aov(mean_chars ~ emails$V1))
 
 # Significant - related to total_chars
@@ -149,7 +146,7 @@ summary(aov(ampersands ~ emails$V1))
 
 # Significant
 summary(aov(qmarks ~ emails$V1))
-# Not significant - was related to length
+# Significant
 summary(aov(qmarks_per_word ~ emails$V1))
 
 # Not significant
@@ -166,15 +163,12 @@ summary(aov(words_per_sentence ~ emails$V1))
 words_per_comma <- commas/num_words
 summary(aov(words_per_comma ~ emails$V1))
 
-# Significant
-hyphens_per_word <- hyphens/num_words
-summary(aov(hyphens_per_word ~ emails$V1))
 
 # Not Significant
 parentheses_per_word <- parentheses/num_words
 summary(aov(parentheses_per_word ~ emails$V1))
 
-# Significant
+# Not Significant
 numerals_per_word <- numerals/num_words
 summary(aov(numerals_per_word ~ emails$V1))
 
@@ -187,33 +181,33 @@ summary(aov(numerals_per_word ~ emails$V1))
 
 # Create df for analysis
 m <- as.matrix(dtmr)
-m_train <- m[1:1200,]
+m_train <- m[1:3505,]
 df <- data.frame(emails$V1, num_words, m_train)
 
 # Write base set to csv
 write.csv(df, file="data/processed_train_df.csv")
 
 # After adding new features
-df2 <- data.frame(emails$V1, num_words, numerals_per_word,
+df2 <- data.frame(emails$V1, num_words, qmarks_per_word,
                   hyphens_per_word, m_train)
 write.csv(df2, file="data/processed_train_df_2.csv")
 
 # Process Test Data for use in final submission
-m_test <- m[1201:1305,]
+m_test <- m[3506:3894,]
 test_num_words <- c()
-test_numerals_per_word <- c()
+test_qmarks_per_word <- c()
 test_hyphens_per_word <- c()
 for (i in 1:nrow(test)) {
   vec <- as.vector((test$wordvec[i])[[1]])
   test_num_words[i] <- length(vec)
-  test_numerals_per_word[i] <- str_count(test$wordvec[i], pattern = "[0-9]")/test$num_words[i]
-  test_hyphens_per_word[i] <- str_count(test$wordvec[i], pattern = "-")/test$num_words[i]
+  test_hyphens_per_word[i] <- str_count(test$wordvec[i], pattern = "-")/test_num_words[i]
+  test_qmarks_per_word[i] <- str_count(test$wordvec[i], pattern = "/?")/test_num_words[i]
 }
-df_test <- data.frame(test$num_words, m_test)
+df_test <- data.frame(test_num_words, m_test)
 write.csv(df_test, file="data/processed_test_df.csv")
 
 # After adding some additional features: our best model
-df_test_2 <- data.frame(test_num_words, test_numerals_per_word, 
+df_test_2 <- data.frame(test_num_words, test_qmarks_per_word, 
                       test_hyphens_per_word, m_test)
 write.csv(df_test_2, file="data/processed_test_df_2.csv")
 
