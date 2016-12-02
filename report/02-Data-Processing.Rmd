@@ -10,6 +10,8 @@ library(pander)
 
 The initial training data consisted of a tab separated file with two columns: the sender code (labeled 1-5) and the string of the email. With 3505 emails in the training set and another 394 as our test set, we proceeded to converting the emails into a frequency matrix.
 
+Initially, we read in the tables with the parameter sep = "\t", because the files were tab-separated. However, this somehow misread the data, concatenating some entries, so that most of our original modeling was done on an erroneous dataset. We only realized that our datasets had too few observations very late. After we reread the data correctly without this parameter, we were able to rerun our processing code without much trouble, but had to re-tune our models at the last minute. Given the computationally intensive nature of the models, this was a significant challenge.
+
 After reading in the tsv, we converted the string to a character vector. We then wrote those vectors to a corpus so that we could use the R package `tm` to remove punctuation, numbers, and stop words; convert to lower case; and stem. 
 
 Next, we removed common words that were seen in every email, such as "subject", and "US", and words that were seen in 3 or fewer emails- this helps us eliminate the long tail of words that are used too infrequently to provide any sort of pattern. 
