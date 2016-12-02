@@ -9,11 +9,6 @@ library(parallel)
 # Setwd to root directory of project before reading data
 setwd("~/Fall 2016/STAT 154/Final Project")
 
-# Read training data
-#train_df <- read.csv("STAT154-Group04/data/processed_train_df_4.csv")
-#train_df <- train_df[,-1]
-#train_df[,1] <- as.factor(train_df[,1])
-
 # First column is target variable
 # Second is number of words 
 # Remaining are word frequencies
@@ -95,8 +90,8 @@ clusterExport(cl, "train_df")
 clusterExport(cl, "cost_vec")
 clusterExport(cl, "cost_gamma")
 clusterEvalQ(cl, library(e1071))
-#svm_lin_df3 <- parSapply(cl, 1:length(cost_vec), FUN = sum_lin)
-#svm_poly_df3 <- parSapply(cl, 1:length(cost_vec), FUN = sum_poly)
+svm_lin_df3 <- parSapply(cl, 1:length(cost_vec), FUN = sum_lin)
+svm_poly_df3 <- parSapply(cl, 1:length(cost_vec), FUN = sum_poly)
 svm_rad_df3 <- parSapply(cl, 1:length(cost_gamma), FUN = sum_rad)
 stopCluster(cl)
 
