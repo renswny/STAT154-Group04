@@ -22,7 +22,8 @@ ggplot(df, aes(x = Trees, y = CV_Error, col = as.factor(M))) +
   geom_point(aes(size = as.factor(Mean), shape = as.factor(Mean))) + 
   geom_line(aes(x = Trees, y = CV_Error, col = as.factor((M))), data = mean_df) + 
   scale_x_continuous(breaks = c(200, 400, 600)) +
-  guides(col=guide_legend(title="M")) + guides(size=FALSE) + guides(shape=FALSE)
+  guides(col=guide_legend(title="M")) + guides(size=FALSE) +
+  guides(shape=guide_legend(title="Mean"))
 
 dev.off()
 
