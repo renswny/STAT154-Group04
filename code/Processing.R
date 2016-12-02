@@ -91,7 +91,7 @@ for (i in 1:5) {
 # Exploration
 library(ggplot2)
 png("images/SenderHistogram.png")
-qplot(V1, data=emails, geom="histogram", col=I("white"), binwidth=1, 
+qplot(V1, data=emails, geom="histogram", col=I("white"), binwidth=1,
               main = "Histogram for Sender",
               xlab = "Sender")
 dev.off()
