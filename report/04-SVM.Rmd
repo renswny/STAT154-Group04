@@ -11,14 +11,28 @@ library(pander)
 # load("data/SVM.Rdata")
 ```
 
-Explanation...
+The second type of classifier that we utilized in our analysis of the emails was Support Vector Machines (SVM). The goal of SVM is to create an optimal hyperplane that predicts the class an observation is in depending on which side of the hyperplane it lies. To create the optimal hyperplane, one which maximized the margin between the support vectors and the hyperplane, we utilized the functions within the package ‘e1071’ in ‘R’. In using the functions, we were asked to provide the type of kernel, the value of cost, the value of gamma (when using the radial kernel), and the number of degrees (when using the polynomial radial), aside from the formula, the data set, and the number of folds in doing cross validation.  
+  
+In order to find the optimal hyperplane, we had to first find the best tuning parameters (value of cost and value of gamma for each kernel type) that yielded the lowest error rate using cross-validation. To find these tuning parameters, we ran multiple iterations of the ‘svm’ function with the following options for kernel type, cost and gamma:  
+kernel = {“linear”, “polynomial”, “radial”}  
+cost = {0.1, 0.5, 1, 10, 100}  
+gamma = {0.1, 0.5, 1, 5}  
+  
+For kernel, we utilized the 3 typical options as they allowed us to use linear and non-linear approaches, accounting for scenarios where the data cannot be best divided by a linear class boundary. For cost, we wanted to have iterations in which we have a low and a high budget. Having a low cost-value, means that we want to restrict the number of slack variables, and a higher cost-value means that we allow for more violations. Similar to the cost, we fit an array of values for the tuning parameter. A higher value for gamma means two observations are considered to be in the same class if they are closer to each other, while a lower gamma value allows the radius of the area of influence to be farther and as a result more data points are captured in certain classes. With each value of the cost and gamma tuning parameters, we experience a tradeoff between the bias and variance. We can find the optimal tradeoff point and the tuning parameters by using cross-validation.  
+
+Prior to running the code, we decided to filter some of the features out. In our original data set, we had 9792 features. We noticed that in more than 50% of the features (5657 features or 57%), the word feature appeared less than 10 times. Due to the smaller occurrence of the word in comparison to the overall number of observations, we decided it would be best to filter out these features from our overall data set as they are potentially noise variables.  
+
+With the refined data set, we determined the optimal hyperplane and SVM classifier model. In our code, we utilized the tunecontrol parameter to run a 5-fold cross-validation that would reduce overfitting and provide a better estimate for the error rate. Running the code across the different permutations of kernels, the cost tuning parameter, and the gamma tuning parameter, we determined the CV error for each permutation. Comparing the CV error rates, we saw that the lowest CV error was for the "linear" kernel with a cost-value of 0.1. Having determined the optimal tuning parameter and the kernel type, we now have a model that can be used to predict the email senders for the processed test data.  
+
+#### SVM with Feature Selection
+We also ran SVM using feature selection to reduce the number of features to a value below the number of observations and to use features in our analysis that have a large impact on the data set. 
 
 
 ```{r echo=FALSE}
 Step <- c("SVM", "SVM with Feature Selection")
-Features_Used <- c(0, 0)
-Total_Accuracy <- c(0, 0)
-Accuracy_per_class <- c(0, 0)
+Features_Used <- c(9792, 4135)
+Total_Accuracy <- c(0.989, 0)
+Accuracy_per_class <- c("98%, 98%, 99%, 99%, 100%", "xx%, yy%, zz%, aa%, bb%")
 df <- data.frame(Step, Features_Used, Total_Accuracy, Accuracy_per_class)
 colnames(df) <- c("Step", " Number of Features Used", "Accuracy", "Accuracy by Class")
 pander(df)
