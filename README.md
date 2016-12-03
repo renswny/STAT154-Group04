@@ -30,3 +30,5 @@ This folder contains plots that were generated through scripts, including some s
 
 ### wrongdata/
 This contains some of the data, the processing script, and the RF model from the beginning of our project, when we misread the data. Because we built a very thorough RF model on this data, and some of our plots were generated using it, we have included this data and these scripts.
+
+acc: 0.763496143958869
